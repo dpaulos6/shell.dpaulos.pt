@@ -466,7 +466,13 @@ function Show-PaulosUsage {
 function Show-PaulosCommands { Show-PaulosTable -Title "Custom commands" -Rows (Get-PaulosData "commands" | Sort-Object Category, Command) -Columns @("Category", "Command", "Description") }
 function Show-PaulosTools { Show-PaulosTable -Title "CLI tools / binaries" -Rows (Get-PaulosToolRows | Sort-Object Category, Tool) -Columns @("Status", "Category", "Tool", "Cmd", "Description") }
 function Show-PaulosModules { Show-PaulosTable -Title "PowerShell modules / plugins" -Rows (Get-PaulosModuleRows | Sort-Object Category, Module) -Columns @("Status", "Category", "Module", "Description") }
-function Show-PaulosTip { $tips = Get-PaulosData "tips"; if ($tips.Count -gt 0) { Write-Host "💡 $(Get-Random -InputObject $tips)" -ForegroundColor DarkYellow } }
+function Show-PaulosTip {
+  $tips = @(Get-PaulosData "tips")
+
+  if ($tips.Length -gt 0) {
+    Write-Host "💡 $(Get-Random -InputObject $tips)" -ForegroundColor DarkYellow
+  }
+}
 function Show-PaulosHelp { Show-PaulosUsage; Show-PaulosCommands; Show-PaulosTools; Show-PaulosModules; Write-Host ""; Show-PaulosTip; Write-Host "" }
 function Show-PaulosFull { Show-PaulosHelp }
 
@@ -677,15 +683,46 @@ function Invoke-PaulosStarship {
 
 function Invoke-PaulosGithub {
   param([string]$Action = "status")
-  if (-not (Test-PaulosCommand gh)) { Write-Warning "GitHub CLI is not installed. Run 'paulos tools install' first."; return }
-  if ($Action -eq "login") { gh auth login; return }
-  if ($Action -in @("setup-git", "git")) { gh auth setup-git; return }
-  if ($Action -eq "logout") { gh auth logout; return }
+
+  if (-not (Test-PaulosCommand gh)) {
+    Write-Warning "GitHub CLI is not installed. Run 'paulos tools install' first."
+    return
+  }
+
+  if ($Action -eq "login") {
+    gh auth login
+    return
+  }
+
+  if ($Action -in @("setup-git", "git")) {
+    gh auth setup-git
+    return
+  }
+
+  if ($Action -eq "logout") {
+    gh auth logout
+    return
+  }
+
   Write-Host ""
   Write-Host "GitHub CLI" -ForegroundColor Cyan
-  gh auth status
-  if ($LASTEXITCODE -eq 0) { Write-Host "✓ GitHub CLI is authenticated. Useful commands: prs, prc, prv" -ForegroundColor Green }
-  else { Write-Host "Run: paulos github login" -ForegroundColor DarkYellow }
+
+  $authOutput = gh auth status 2>&1
+  $ok = $LASTEXITCODE -eq 0
+
+  Show-PaulosActionTable -Rows @(
+    [PSCustomObject]@{
+      Status = if ($ok) { "✓" } else { "setup" }
+      Item   = "Authentication"
+      Detail = if ($ok) { "Authenticated. Useful commands: prs, prc, prv" } else { "Run: paulos github login" }
+    }
+  )
+
+  if ($Action -eq "verbose") {
+    $authOutput
+  }
+
+  Write-Host "Commands: paulos github login | paulos github setup-git | paulos github verbose" -ForegroundColor DarkGray
 }
 
 function Invoke-PaulosUpdate {
@@ -825,27 +862,56 @@ function Show-PaulosBoot {
 }
 
 function paulos {
-  param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Args)
+  param(
+    [Parameter(ValueFromRemainingArguments = $true)]
+    [string[]]$RemainingArgs
+  )
 
-  $first = if ($Args.Count -gt 0) { $Args[0] } else { "-h" }
-  $rest = if ($Args.Count -gt 1) { $Args[1..($Args.Count - 1)] } else { @() }
-  $action = if ($rest.Count -gt 0) { $rest[0] } else { "status" }
+  $tokens = @($RemainingArgs)
+
+  $first = if ($tokens.Length -gt 0 -and -not [string]::IsNullOrWhiteSpace($tokens[0])) {
+    $tokens[0]
+  }
+  else {
+    "-h"
+  }
+
+  $action = if ($tokens.Length -gt 1 -and -not [string]::IsNullOrWhiteSpace($tokens[1])) {
+    $tokens[1]
+  }
+  else {
+    "status"
+  }
 
   switch ($first) {
     "-h" { Show-PaulosHelp }
     "--help" { Show-PaulosHelp }
     "help" { Show-PaulosHelp }
+
     "commands" { Show-PaulosCommands }
     "cmds" { Show-PaulosCommands }
-    "tools" { if ($action -eq "install") { Install-PaulosDevShellTools } else { Show-PaulosTools } }
+
+    "tools" {
+      if ($action -eq "install") {
+        Install-PaulosDevShellTools
+      }
+      else {
+        Show-PaulosTools
+      }
+    }
+
     "binaries" { Show-PaulosTools }
+
     "modules" { Show-PaulosModules }
     "plugins" { Show-PaulosModules }
+
     "full" { Show-PaulosFull }
     "tip" { Show-PaulosTip }
+
     "setup" { Invoke-PaulosSetup }
     "doctor" { Invoke-PaulosDoctor }
     "wizard" { Invoke-PaulosWizard }
+
     "delta" { Invoke-PaulosDelta $action }
     "font" { Invoke-PaulosFont $action }
     "starship" { Invoke-PaulosStarship $action }
@@ -853,8 +919,13 @@ function paulos {
     "gh" { Invoke-PaulosGithub $action }
     "update" { Invoke-PaulosUpdate $action }
     "pnpm" { Invoke-PaulosPnpm $action }
+
     "backup" { Backup-PaulosProfile | Out-Null }
     "restore" { Restore-PaulosProfile $action }
-    default { Write-Host "Unknown option: $first" -ForegroundColor Red; Write-Host "Run 'paulos -h' for help." -ForegroundColor DarkGray }
+
+    default {
+      Write-Host "Unknown option: $first" -ForegroundColor Red
+      Write-Host "Run 'paulos -h' for help." -ForegroundColor DarkGray
+    }
   }
 }
