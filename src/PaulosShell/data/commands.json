@@ -1,0 +1,172 @@
+[
+  {
+    "Category": "Shell",
+    "Command": "paulos -h",
+    "Description": "Show the Paulos Dev Shell help dashboard"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos setup",
+    "Description": "Run setup dashboard for font, Delta, GitHub CLI, pnpm, Starship"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos wizard",
+    "Description": "Interactive guided setup"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos doctor",
+    "Description": "Run full diagnostics"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos commands/tools/modules/full",
+    "Description": "Show command/tool/module tables"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos delta / delta fix",
+    "Description": "Check or configure Git Delta globally"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos font / font download",
+    "Description": "Check/download CaskaydiaCove Nerd Font"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos starship / starship fix",
+    "Description": "Check/configure Starship profile integration"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos github / github login",
+    "Description": "Check/authenticate GitHub CLI"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos update",
+    "Description": "Show update commands for tools/modules/deps/font/self"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos pnpm / pnpm approve",
+    "Description": "Check pnpm and run approve-builds"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos backup / restore",
+    "Description": "Backup or restore PowerShell profile"
+  },
+  {
+    "Category": "Shell",
+    "Command": "shellcheck",
+    "Description": "Show installed shell/dev tool diagnostics"
+  },
+  {
+    "Category": "Shell",
+    "Command": "reload",
+    "Description": "Reload PowerShell profile"
+  },
+  {
+    "Category": "Shell",
+    "Command": "profile",
+    "Description": "Open PowerShell profile"
+  },
+  {
+    "Category": "Files",
+    "Command": "lt",
+    "Description": "Show tree view with icons using eza"
+  },
+  {
+    "Category": "Files",
+    "Command": "ll / ls",
+    "Description": "List files with icons using eza"
+  },
+  {
+    "Category": "Files",
+    "Command": "cat",
+    "Description": "Pretty-print files using bat"
+  },
+  {
+    "Category": "Files",
+    "Command": "ff",
+    "Description": "Find files using fd"
+  },
+  {
+    "Category": "Files",
+    "Command": "mkcd / touch / open",
+    "Description": "Folder/file convenience helpers"
+  },
+  {
+    "Category": "Search",
+    "Command": "grep <text>",
+    "Description": "Search text using ripgrep"
+  },
+  {
+    "Category": "Search",
+    "Command": "todo",
+    "Description": "Find TODO/FIXME/HACK/BUG comments"
+  },
+  {
+    "Category": "PNPM",
+    "Command": "run/dev/build/test/e2e",
+    "Description": "pnpm run shortcuts"
+  },
+  {
+    "Category": "PNPM",
+    "Command": "i/add/un/up/dlx/why/outdated/approve",
+    "Description": "pnpm package helpers"
+  },
+  {
+    "Category": "Biome",
+    "Command": "lint/format/check",
+    "Description": "Biome write-mode shortcuts via pnpx"
+  },
+  {
+    "Category": "Git",
+    "Command": "gst/gss/gadd/gcommit/gpush/gpull/glog/gdiff",
+    "Description": "Safe Git shortcuts"
+  },
+  {
+    "Category": "Git",
+    "Command": "lg",
+    "Description": "Open lazygit"
+  },
+  {
+    "Category": "GitHub",
+    "Command": "prs/prc/prv",
+    "Description": "GitHub PR helpers"
+  },
+  {
+    "Category": ".NET",
+    "Command": "dn/dnb/dnr/dnt/dnw/dnc",
+    "Description": "dotnet shortcuts"
+  },
+  {
+    "Category": ".NET",
+    "Command": "ef/efadd/efup",
+    "Description": "Entity Framework shortcuts"
+  },
+  {
+    "Category": "Project",
+    "Command": "scripts/codehere/whereis",
+    "Description": "Project convenience helpers"
+  },
+  {
+    "Category": "System",
+    "Command": "ports/port/killport",
+    "Description": "Port diagnostics and cleanup"
+  },
+  {
+    "Category": "UI",
+    "Command": "ishadcn/shadcn/magicui",
+    "Description": "UI CLI shortcuts"
+  },
+  {
+    "Category": "Images",
+    "Command": "icogen",
+    "Description": "Generate favicon.ico using ImageMagick"
+  }
+]

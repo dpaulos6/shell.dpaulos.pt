@@ -1,0 +1,28 @@
+# PowerShell
+*.ps1xml
+*.pssc
+*.psrc
+*.psd1.bak
+*.ps1.bak
+
+# Local state
+.paulos-shell/
+local.ps1
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Logs/temp
+*.log
+*.tmp
+*.temp
+
+# Node, if docs/site are added later
+node_modules/
+dist/
+build/
+.env
+.env.*

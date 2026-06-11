@@ -1,0 +1,210 @@
+[
+  {
+    "Category": "Core",
+    "Tool": "Git",
+    "Command": "git",
+    "WingetId": "Git.Git",
+    "Description": "Version control",
+    "Essential": true
+  },
+  {
+    "Category": "Core",
+    "Tool": "winget",
+    "Command": "winget",
+    "WingetId": "",
+    "Description": "Windows package manager",
+    "Essential": false
+  },
+  {
+    "Category": "Core",
+    "Tool": "VS Code CLI",
+    "Command": "code",
+    "WingetId": "Microsoft.VisualStudioCode",
+    "Description": "Open/edit projects from terminal",
+    "Essential": false
+  },
+  {
+    "Category": "Node",
+    "Tool": "Node.js LTS",
+    "Command": "node",
+    "WingetId": "OpenJS.NodeJS.LTS",
+    "Description": "JavaScript runtime",
+    "Essential": true
+  },
+  {
+    "Category": "Node",
+    "Tool": "npm",
+    "Command": "npm",
+    "WingetId": "",
+    "Description": "Node package manager bundled with Node.js",
+    "Essential": false
+  },
+  {
+    "Category": "Node",
+    "Tool": "pnpm",
+    "Command": "pnpm",
+    "WingetId": "pnpm.pnpm",
+    "Description": "Preferred package manager",
+    "Essential": true
+  },
+  {
+    "Category": "Node",
+    "Tool": "fnm",
+    "Command": "fnm",
+    "WingetId": "Schniz.fnm",
+    "Description": "Fast Node version manager",
+    "Essential": true
+  },
+  {
+    "Category": ".NET",
+    "Tool": ".NET SDK",
+    "Command": "dotnet",
+    "WingetId": "Microsoft.DotNet.SDK.10",
+    "Description": ".NET CLI / SDK",
+    "Essential": false
+  },
+  {
+    "Category": "Prompt",
+    "Tool": "Starship",
+    "Command": "starship",
+    "WingetId": "Starship.Starship",
+    "Description": "Cross-shell prompt",
+    "Essential": true
+  },
+  {
+    "Category": "Navigation",
+    "Tool": "fzf",
+    "Command": "fzf",
+    "WingetId": "junegunn.fzf",
+    "Description": "Fuzzy finder",
+    "Essential": true
+  },
+  {
+    "Category": "Navigation",
+    "Tool": "zoxide",
+    "Command": "zoxide",
+    "WingetId": "ajeetdsouza.zoxide",
+    "Description": "Smarter cd command",
+    "Essential": true
+  },
+  {
+    "Category": "Navigation",
+    "Tool": "eza",
+    "Command": "eza",
+    "WingetId": "eza-community.eza",
+    "Description": "Modern ls replacement with icons",
+    "Essential": true
+  },
+  {
+    "Category": "Files",
+    "Tool": "bat",
+    "Command": "bat",
+    "WingetId": "sharkdp.bat",
+    "Description": "Modern cat replacement with syntax highlighting",
+    "Essential": true
+  },
+  {
+    "Category": "Files",
+    "Tool": "fd",
+    "Command": "fd",
+    "WingetId": "sharkdp.fd",
+    "Description": "Modern file finder",
+    "Essential": true
+  },
+  {
+    "Category": "Search",
+    "Tool": "ripgrep",
+    "Command": "rg",
+    "WingetId": "BurntSushi.ripgrep.MSVC",
+    "Description": "Fast recursive text search",
+    "Essential": true
+  },
+  {
+    "Category": "Git",
+    "Tool": "GitHub CLI",
+    "Command": "gh",
+    "WingetId": "GitHub.cli",
+    "Description": "GitHub PR/issues/repos from terminal",
+    "Essential": true
+  },
+  {
+    "Category": "Git",
+    "Tool": "lazygit",
+    "Command": "lazygit",
+    "WingetId": "JesseDuffield.lazygit",
+    "Description": "Terminal UI for Git",
+    "Essential": true
+  },
+  {
+    "Category": "Git",
+    "Tool": "delta",
+    "Command": "delta",
+    "WingetId": "dandavison.delta",
+    "Description": "Better git diff viewer",
+    "Essential": true
+  },
+  {
+    "Category": "Data",
+    "Tool": "jq",
+    "Command": "jq",
+    "WingetId": "jqlang.jq",
+    "Description": "JSON processor",
+    "Essential": true
+  },
+  {
+    "Category": "Data",
+    "Tool": "yq",
+    "Command": "yq",
+    "WingetId": "MikeFarah.yq",
+    "Description": "YAML processor",
+    "Essential": true
+  },
+  {
+    "Category": "Images",
+    "Tool": "ImageMagick",
+    "Command": "magick",
+    "WingetId": "ImageMagick.Q16-HDRI",
+    "Description": "Image conversion/editing CLI",
+    "Essential": true
+  },
+  {
+    "Category": "System",
+    "Tool": "fastfetch",
+    "Command": "fastfetch",
+    "WingetId": "Fastfetch-cli.Fastfetch",
+    "Description": "System info display",
+    "Essential": true
+  },
+  {
+    "Category": "Editor",
+    "Tool": "Notepad++",
+    "Command": "notepad++",
+    "WingetId": "Notepad++.Notepad++",
+    "Description": "Lightweight editor",
+    "Essential": false
+  },
+  {
+    "Category": "Optional",
+    "Tool": "Docker",
+    "Command": "docker",
+    "WingetId": "Docker.DockerDesktop",
+    "Description": "Containers for databases/services",
+    "Essential": false
+  },
+  {
+    "Category": "Optional",
+    "Tool": "Python",
+    "Command": "python",
+    "WingetId": "Python.Python.3.13",
+    "Description": "Python runtime",
+    "Essential": false
+  },
+  {
+    "Category": "Optional",
+    "Tool": "Bun",
+    "Command": "bun",
+    "WingetId": "Oven-sh.Bun",
+    "Description": "Alternative JS runtime/package manager",
+    "Essential": false
+  }
+]

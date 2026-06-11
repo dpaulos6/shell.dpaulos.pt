@@ -1,0 +1,215 @@
+# Paulos Shell
+
+A safe, updateable PowerShell 7 dev-shell toolkit with a `paulos` command center.
+
+This repo turns a large personal PowerShell profile into a module-based setup:
+
+```powershell
+Import-Module PaulosShell
+Initialize-PaulosShell
+```
+
+The installer only adds a small managed block to your PowerShell profile and backs up everything before changing it.
+
+## What it gives you
+
+- `paulos -h` command center with bordered tables.
+- Safe PowerShell profile installer/updater/uninstaller.
+- Tool checks for `git`, `pnpm`, `rg`, `fd`, `eza`, `bat`, `lazygit`, `delta`, `gh`, `.NET`, `zoxide`, `fnm`, and more.
+- Action commands:
+  - `paulos delta` / `paulos delta fix`
+  - `paulos font` / `paulos font download`
+  - `paulos starship` / `paulos starship fix` / `paulos starship config`
+  - `paulos github` / `paulos github login`
+  - `paulos update`
+  - `paulos wizard`
+- Your current dev shortcuts: `dev`, `build`, `lt`, `grep`, `todo`, `lg`, `scripts`, `port`, `killport`, `.NET` helpers, pnpm helpers, Biome helpers, etc.
+
+## Safe install from a cloned repo
+
+```powershell
+git clone https://github.com/dpaulos6/paulos-shell.git
+cd paulos-shell
+.\install.ps1
+```
+
+Open a new terminal, then run:
+
+```powershell
+paulos setup
+```
+
+## Full interactive setup
+
+```powershell
+paulos wizard
+```
+
+The wizard asks before making changes. It can:
+
+- backup your profile
+- install missing tools/modules
+- configure Delta
+- configure Starship
+- create a default `starship.toml`
+- open the Nerd Font download
+- run GitHub CLI login
+
+## One-line install later
+
+After uploading this repo to GitHub, you can eventually install with:
+
+```powershell
+irm https://raw.githubusercontent.com/dpaulos6/paulos-shell/main/install.ps1 -OutFile install-paulos.ps1
+notepad install-paulos.ps1
+.\install-paulos.ps1
+```
+
+Avoid blindly piping remote scripts into `iex` unless you trust and reviewed the script.
+
+## Useful commands
+
+```powershell
+paulos -h
+paulos setup
+paulos doctor
+paulos wizard
+paulos tools
+paulos tools install
+paulos modules
+paulos delta
+paulos delta fix
+paulos font
+paulos font download
+paulos starship
+paulos starship fix
+paulos starship config
+paulos github
+paulos github login
+paulos update
+paulos pnpm approve
+```
+
+## Delta
+
+Check status:
+
+```powershell
+paulos delta
+```
+
+Configure Git Delta globally:
+
+```powershell
+paulos delta fix
+```
+
+Test after:
+
+```powershell
+git diff
+git show HEAD
+git log -p
+```
+
+## Font
+
+Recommended terminal font:
+
+```text
+CaskaydiaCove Nerd Font Mono
+```
+
+Open download:
+
+```powershell
+paulos font download
+```
+
+Then set it in Windows Terminal:
+
+```text
+Windows Terminal → Settings → PowerShell profile → Appearance → Font face → CaskaydiaCove Nerd Font Mono
+```
+
+## Starship
+
+Install/update Starship profile block:
+
+```powershell
+paulos starship fix
+```
+
+Create default config:
+
+```powershell
+paulos starship config
+```
+
+Open config:
+
+```powershell
+paulos starship open
+```
+
+## Update
+
+From your cloned repo:
+
+```powershell
+git pull
+.\update.ps1 -RunDoctor
+```
+
+Update installed tools:
+
+```powershell
+paulos update winget
+```
+
+Update PowerShell modules:
+
+```powershell
+paulos update modules
+```
+
+Update current project dependencies:
+
+```powershell
+paulos update pnpm
+```
+
+## Uninstall
+
+Remove managed profile blocks:
+
+```powershell
+.\uninstall.ps1
+```
+
+Also delete installed module files:
+
+```powershell
+.\uninstall.ps1 -RemoveFiles
+```
+
+## Safety model
+
+This repo is designed to be conservative:
+
+- It backs up your PowerShell profile before editing it.
+- It uses marked managed blocks so it can update/remove only what it owns.
+- It does not delete your custom profile content.
+- It installs the module under your user documents folder.
+- It does not silently configure GitHub auth or fonts.
+- Starship and Delta are explicit commands.
+
+## Custom local overrides
+
+Create this file for private/local tweaks that should survive updates:
+
+```powershell
+~\.paulos-shell\local.ps1
+```
+
+It is dot-sourced by `Initialize-PaulosShell` if present.

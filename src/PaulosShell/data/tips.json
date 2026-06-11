@@ -1,0 +1,12 @@
+[
+  "Use 'paulos setup' after install to see what still needs manual configuration.",
+  "Use 'paulos delta fix' once to make git diff/git show use Delta.",
+  "Use 'paulos font download' if icons show as boxes or question marks.",
+  "Use 'lt' to quickly inspect a project tree.",
+  "Use 'todo' to find TODO/FIXME/HACK/BUG comments.",
+  "Use 'scripts' to quickly see all package.json commands.",
+  "Use 'port 3000' or 'killport 3000' when a dev server gets stuck.",
+  "Use 'approve' or 'paulos pnpm approve' when pnpm blocks dependency build scripts.",
+  "Use 'lg' when Git gets annoying.",
+  "Use 'grep <text>' instead of searching manually in huge repos."
+]

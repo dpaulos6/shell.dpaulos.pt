@@ -1,0 +1,44 @@
+[
+  {
+    "Category": "Editing",
+    "Module": "PSReadLine",
+    "Description": "Better command-line editing, history, predictions",
+    "Essential": true
+  },
+  {
+    "Category": "Editing",
+    "Module": "CompletionPredictor",
+    "Description": "Plugin-based completion predictions",
+    "Essential": true
+  },
+  {
+    "Category": "Icons",
+    "Module": "Terminal-Icons",
+    "Description": "File/folder icons in terminal output",
+    "Essential": true
+  },
+  {
+    "Category": "Fuzzy",
+    "Module": "PSFzf",
+    "Description": "fzf integration for PowerShell",
+    "Essential": true
+  },
+  {
+    "Category": "Git",
+    "Module": "posh-git",
+    "Description": "Git status integration",
+    "Essential": true
+  },
+  {
+    "Category": "Secrets",
+    "Module": "Microsoft.PowerShell.SecretManagement",
+    "Description": "Secret management abstraction",
+    "Essential": false
+  },
+  {
+    "Category": "Secrets",
+    "Module": "Microsoft.PowerShell.SecretStore",
+    "Description": "Local encrypted secret vault",
+    "Essential": false
+  }
+]
