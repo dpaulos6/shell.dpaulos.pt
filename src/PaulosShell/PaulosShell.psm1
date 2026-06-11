@@ -224,9 +224,12 @@ function Initialize-PaulosShell {
     . $localFile
   }
 
-  if (-not $NoBoot -and $env:PAULOS_NO_BOOT -ne "1" -and -not $script:PaulosBootShown) {
-    $script:PaulosBootShown = $true
-    Show-PaulosBoot
+  $bootShownVar = Get-Variable -Name PaulosBootShown -Scope Script -ErrorAction SilentlyContinue
+  $bootAlreadyShown = $null -ne $bootShownVar -and [bool]$bootShownVar.Value
+
+  if (-not $NoBoot -and $env:PAULOS_NO_BOOT -ne "1" -and -not $bootAlreadyShown) {
+	$script:PaulosBootShown = $true
+	Show-PaulosBoot
   }
 }
 
