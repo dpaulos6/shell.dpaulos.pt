@@ -72,6 +72,27 @@ function Clear-PaulosUpdateCache {
   return $false
 }
 
+function Set-PaulosManifestVersion {
+  param(
+    [Parameter(Mandatory = $true)][string]$ManifestPath,
+    [Parameter(Mandatory = $true)][string]$Version
+  )
+
+  if (-not (Test-Path $ManifestPath)) {
+    throw "Manifest not found: $ManifestPath"
+  }
+
+  $content = Get-Content -Path $ManifestPath -Raw
+  $pattern = "(?m)^(\s*ModuleVersion\s*=\s*')[^']*(')"
+
+  if ($content -notmatch $pattern) {
+    throw "Could not find ModuleVersion in manifest: $ManifestPath"
+  }
+
+  $updated = [regex]::Replace($content, $pattern, ('$1' + $Version + '$2'), 1)
+  Set-Content -Path $ManifestPath -Value $updated -Encoding UTF8
+}
+
 function Backup-PaulosProfile {
   Ensure-PaulosStateDirs
 
@@ -1165,7 +1186,9 @@ function Invoke-PaulosSelfUpdate {
 
   try {
     Remove-Item -Path $installedRoot -Recurse -Force -ErrorAction Stop
-    Copy-Item -Path $releaseRoot.FullName -Destination $installedRoot -Recurse -Force -ErrorAction Stop
+    New-Item -ItemType Directory -Path $installedRoot -Force | Out-Null
+    Copy-Item -Path (Join-Path $releaseRoot.FullName "*") -Destination $installedRoot -Recurse -Force -ErrorAction Stop
+    Set-PaulosManifestVersion -ManifestPath $installedManifest -Version ($latestVersion -replace "^v", "")
     Clear-PaulosUpdateCache | Out-Null
   }
   catch {
