@@ -465,6 +465,7 @@ function Show-PaulosUsage {
   Write-Host ""
   Write-Host "Commands:" -ForegroundColor DarkGray
   Write-Host "  -h, --help, help       Show help dashboard"
+  Write-Host "  -v, --version, version Show PaulosShell version"
   Write-Host "  setup                  Setup dashboard"
   Write-Host "  wizard                 Interactive setup wizard"
   Write-Host "  doctor                 Full diagnostics"
@@ -484,6 +485,17 @@ function Show-PaulosUsage {
 function Show-PaulosCommands { Show-PaulosTable -Title "Custom commands" -Rows (Get-PaulosData "commands" | Sort-Object Category, Command) -Columns @("Category", "Command", "Description") }
 function Show-PaulosTools { Show-PaulosTable -Title "CLI tools / binaries" -Rows (Get-PaulosToolRows | Sort-Object Category, Tool) -Columns @("Status", "Category", "Tool", "Cmd", "Description") }
 function Show-PaulosModules { Show-PaulosTable -Title "PowerShell modules / plugins" -Rows (Get-PaulosModuleRows | Sort-Object Category, Module) -Columns @("Status", "Category", "Module", "Description") }
+function Show-PaulosVersion {
+  $version = Get-PaulosCurrentVersion
+  $manifestPath = Join-Path $script:PaulosModuleRoot "PaulosShell.psd1"
+
+  Write-Host ""
+  Write-Host "PaulosShell" -ForegroundColor Cyan
+  Write-Host "  Version: $version" -ForegroundColor DarkGray
+  Write-Host "  Module:  $script:PaulosModuleRoot" -ForegroundColor DarkGray
+  Write-Host "  Manifest: $manifestPath" -ForegroundColor DarkGray
+  Write-Host ""
+}
 function Show-PaulosTip {
   $tips = @(Get-PaulosData "tips")
 
@@ -1214,6 +1226,10 @@ function paulos {
     "-h" { Show-PaulosHelp }
     "--help" { Show-PaulosHelp }
     "help" { Show-PaulosHelp }
+
+    "-v" { Show-PaulosVersion }
+    "--version" { Show-PaulosVersion }
+    "version" { Show-PaulosVersion }
 
     "commands" { Show-PaulosCommands }
     "cmds" { Show-PaulosCommands }

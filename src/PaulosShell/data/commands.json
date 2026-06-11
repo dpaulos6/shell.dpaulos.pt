@@ -183,5 +183,15 @@
     "Category": "Shell",
     "Command": "paulos update clear-cache",
     "Description": "Clear cached update-check result"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos -v",
+    "Description": "Show PaulosShell version"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos version",
+    "Description": "Show PaulosShell version"
   }
 ]

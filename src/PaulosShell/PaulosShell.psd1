@@ -31,6 +31,8 @@
     'Show-PaulosModules',
     'Show-PaulosFull',
     'Show-PaulosTip',
+    'Show-PaulosVersion',
+    'Get-PaulosCurrentVersion',
     'Backup-PaulosProfile',
     'Restore-PaulosProfile',
 
