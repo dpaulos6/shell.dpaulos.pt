@@ -7,6 +7,10 @@ Set-StrictMode -Version Latest
 $script:PaulosModuleRoot = $PSScriptRoot
 $script:PaulosStateDir = Join-Path $HOME ".paulos-shell"
 $script:PaulosBackupDir = Join-Path $script:PaulosStateDir "backups"
+$script:PaulosRepoOwner = "dpaulos6"
+$script:PaulosRepoName = "shell.dpaulos.pt"
+$script:PaulosUpdateCheckIntervalHours = 12
+$script:PaulosUpdateStatePath = Join-Path $script:PaulosStateDir "update-check.json"
 
 function Test-PaulosCommand {
   param([Parameter(Mandatory = $true)][string]$Name)
@@ -471,7 +475,7 @@ function Show-PaulosUsage {
   Write-Host "  font [download|open|list]"
   Write-Host "  starship [fix|config|open]"
   Write-Host "  github [login|setup-git|logout]"
-  Write-Host "  update [winget|modules|pnpm|self]"
+  Write-Host "  update [check|self|clear-cache|winget|modules|pnpm]"
   Write-Host "  pnpm [approve|store]"
   Write-Host "  backup / restore [latest]"
   Write-Host "  tip"
@@ -741,10 +745,56 @@ function Invoke-PaulosGithub {
 
 function Invoke-PaulosUpdate {
   param([string]$Action = "status")
-  if ($Action -eq "winget") { winget upgrade --all; return }
-  if ($Action -in @("modules", "psmodules")) { Update-Module; return }
-  if ($Action -eq "pnpm") { pnpm update; return }
-  if ($Action -eq "self") { Write-Host "Run update.ps1 from your cloned paulos-shell repo, or pull latest and run .\update.ps1" -ForegroundColor DarkYellow; return }
+
+  if ($Action -eq "winget") {
+    winget upgrade --all
+    return
+  }
+
+  if ($Action -in @("modules", "psmodules")) {
+    Update-Module
+    return
+  }
+
+  if ($Action -eq "pnpm") {
+    pnpm update
+    return
+  }
+
+  if ($Action -in @("check", "status")) {
+    Show-PaulosUpdateStatus
+    return
+  }
+
+  if ($Action -eq "clear-cache") {
+    Remove-Item $script:PaulosUpdateStatePath -Force -ErrorAction SilentlyContinue
+    Write-Host "✓ PaulosShell update-check cache cleared." -ForegroundColor Green
+    return
+  }
+
+  if ($Action -eq "self") {
+    Write-Host ""
+    Write-Host "PaulosShell self-update" -ForegroundColor Cyan
+    Write-Host "Recommended safe update:" -ForegroundColor DarkGray
+    Write-Host "  cd path\to\your\shell.dpaulos.pt clone"
+    Write-Host "  git pull"
+    Write-Host "  .\update.ps1"
+    Write-Host "  Remove-Module PaulosShell -Force -ErrorAction SilentlyContinue"
+    Write-Host "  . `$PROFILE"
+    Write-Host ""
+    Write-Host "Current installed version: $(Get-PaulosCurrentVersion)" -ForegroundColor DarkGray
+
+    $state = Invoke-PaulosUpdateCheck -Force -Quiet
+    if ($state.UpdateAvailable) {
+      Write-Host "Latest available version: $($state.LatestVersion)" -ForegroundColor Yellow
+    }
+    else {
+      Write-Host "Latest available version: $($state.LatestVersion)" -ForegroundColor Green
+    }
+
+    return
+  }
+
   Write-Host ""
   Write-Host "Update helpers" -ForegroundColor Cyan
   Show-PaulosActionTable -Rows @(
@@ -752,7 +802,8 @@ function Invoke-PaulosUpdate {
     [PSCustomObject]@{ Status = "ok"; Item = "PS modules"; Detail = "paulos update modules" },
     [PSCustomObject]@{ Status = if (Test-PaulosCommand pnpm) { "✓" } else { "missing" }; Item = "project deps"; Detail = "paulos update pnpm" },
     [PSCustomObject]@{ Status = "manual"; Item = "Nerd Font"; Detail = "paulos font download" },
-    [PSCustomObject]@{ Status = "manual"; Item = "PaulosShell"; Detail = "git pull, then .\update.ps1" }
+    [PSCustomObject]@{ Status = "info"; Item = "Check PaulosShell"; Detail = "paulos update check" },
+    [PSCustomObject]@{ Status = "manual"; Item = "Update PaulosShell"; Detail = "paulos update self" }
   )
 }
 
@@ -852,6 +903,234 @@ function shellcheck {
   $rows | Format-Table -AutoSize
 }
 
+function Get-PaulosCurrentVersion {
+  $manifestPath = Join-Path $script:PaulosModuleRoot "PaulosShell.psd1"
+
+  if (-not (Test-Path $manifestPath)) {
+    return "0.0.0"
+  }
+
+  try {
+    $manifest = Test-ModuleManifest -Path $manifestPath -ErrorAction Stop
+    return $manifest.Version.ToString()
+  }
+  catch {
+    return "0.0.0"
+  }
+}
+
+function ConvertTo-PaulosVersion {
+  param([Parameter(Mandatory = $true)][string]$Version)
+
+  $clean = $Version.Trim()
+  $clean = $clean -replace "^v", ""
+  $clean = ($clean -split "[-+]")[0]
+
+  try {
+    return [version]$clean
+  }
+  catch {
+    return [version]"0.0.0"
+  }
+}
+
+function Test-PaulosUpdateAvailable {
+  param(
+    [Parameter(Mandatory = $true)][string]$CurrentVersion,
+    [Parameter(Mandatory = $true)][string]$LatestVersion
+  )
+
+  $current = ConvertTo-PaulosVersion $CurrentVersion
+  $latest = ConvertTo-PaulosVersion $LatestVersion
+
+  return $latest -gt $current
+}
+
+function Get-PaulosUpdateState {
+  Ensure-PaulosStateDirs
+
+  if (-not (Test-Path $script:PaulosUpdateStatePath)) {
+    return $null
+  }
+
+  try {
+    return Get-Content $script:PaulosUpdateStatePath -Raw | ConvertFrom-Json
+  }
+  catch {
+    return $null
+  }
+}
+
+function Save-PaulosUpdateState {
+  param(
+    [Parameter(Mandatory = $true)][object]$State
+  )
+
+  Ensure-PaulosStateDirs
+
+  $State |
+    ConvertTo-Json -Depth 6 |
+    Set-Content -Path $script:PaulosUpdateStatePath -Encoding UTF8
+}
+
+function Test-PaulosShouldCheckForUpdates {
+  param([switch]$Force)
+
+  if ($Force) {
+    return $true
+  }
+
+  if ($env:PAULOS_NO_UPDATE_CHECK -eq "1") {
+    return $false
+  }
+
+  $state = Get-PaulosUpdateState
+
+  if ($null -eq $state) {
+    return $true
+  }
+
+  if ($state.PSObject.Properties.Name -notcontains "CheckedAt") {
+    return $true
+  }
+
+  try {
+    $checkedAt = [datetime]$state.CheckedAt
+    $nextCheck = $checkedAt.AddHours($script:PaulosUpdateCheckIntervalHours)
+    return (Get-Date) -ge $nextCheck
+  }
+  catch {
+    return $true
+  }
+}
+
+function Get-PaulosLatestRelease {
+  $url = "https://api.github.com/repos/$script:PaulosRepoOwner/$script:PaulosRepoName/releases/latest"
+
+  $headers = @{
+    "Accept" = "application/vnd.github+json"
+    "User-Agent" = "PaulosShell"
+  }
+
+  try {
+    $release = Invoke-RestMethod `
+      -Uri $url `
+      -Headers $headers `
+      -Method Get `
+      -TimeoutSec 3 `
+      -ErrorAction Stop
+
+    return [PSCustomObject]@{
+      Ok = $true
+      Version = [string]$release.tag_name
+      Name = [string]$release.name
+      Url = [string]$release.html_url
+      PublishedAt = [string]$release.published_at
+      Error = ""
+    }
+  }
+  catch {
+    return [PSCustomObject]@{
+      Ok = $false
+      Version = ""
+      Name = ""
+      Url = ""
+      PublishedAt = ""
+      Error = $_.Exception.Message
+    }
+  }
+}
+
+function Invoke-PaulosUpdateCheck {
+  param(
+    [switch]$Force,
+    [switch]$Quiet,
+    [switch]$SaveOnly
+  )
+
+  if (-not (Test-PaulosShouldCheckForUpdates -Force:$Force)) {
+    $state = Get-PaulosUpdateState
+
+    if ($Quiet -or $null -eq $state) {
+      return $state
+    }
+
+    if (
+      $state.PSObject.Properties.Name -contains "UpdateAvailable" -and
+      [bool]$state.UpdateAvailable
+    ) {
+      Write-Host ""
+      Write-Host "⬆ PaulosShell update available: $($state.LatestVersion)" -ForegroundColor Yellow
+      Write-Host "  Current: $($state.CurrentVersion)" -ForegroundColor DarkGray
+      Write-Host "  Run: paulos update self" -ForegroundColor DarkGray
+    }
+
+    return $state
+  }
+
+  $currentVersion = Get-PaulosCurrentVersion
+  $latest = Get-PaulosLatestRelease
+
+  $state = [PSCustomObject]@{
+    CheckedAt = (Get-Date).ToString("o")
+    CurrentVersion = $currentVersion
+    LatestVersion = if ($latest.Ok) { $latest.Version } else { "" }
+    UpdateAvailable = if ($latest.Ok) { Test-PaulosUpdateAvailable -CurrentVersion $currentVersion -LatestVersion $latest.Version } else { $false }
+    ReleaseUrl = if ($latest.Ok) { $latest.Url } else { "" }
+    Error = if ($latest.Ok) { "" } else { $latest.Error }
+  }
+
+  Save-PaulosUpdateState -State $state
+
+  if ($SaveOnly -or $Quiet) {
+    return $state
+  }
+
+  if ($state.UpdateAvailable) {
+    Write-Host ""
+    Write-Host "⬆ PaulosShell update available: $($state.LatestVersion)" -ForegroundColor Yellow
+    Write-Host "  Current: $($state.CurrentVersion)" -ForegroundColor DarkGray
+    Write-Host "  Run: paulos update self" -ForegroundColor DarkGray
+  }
+  elseif ($Force) {
+    Write-Host ""
+    Write-Host "✓ PaulosShell is up to date." -ForegroundColor Green
+    Write-Host "  Current: $($state.CurrentVersion)" -ForegroundColor DarkGray
+  }
+
+  return $state
+}
+
+function Show-PaulosUpdateStatus {
+  $state = Invoke-PaulosUpdateCheck -Force
+
+  Write-Host ""
+  Write-Host "PaulosShell update status" -ForegroundColor Cyan
+
+  Show-PaulosActionTable -Rows @(
+    [PSCustomObject]@{
+      Status = if ($state.UpdateAvailable) { "setup" } else { "✓" }
+      Item   = "Current version"
+      Detail = $state.CurrentVersion
+    },
+    [PSCustomObject]@{
+      Status = if ($state.LatestVersion) { "info" } else { "missing" }
+      Item   = "Latest release"
+      Detail = if ($state.LatestVersion) { $state.LatestVersion } else { "Could not fetch latest release" }
+    },
+    [PSCustomObject]@{
+      Status = if ($state.UpdateAvailable) { "setup" } else { "✓" }
+      Item   = "Update"
+      Detail = if ($state.UpdateAvailable) { "Run: paulos update self" } else { "No update available" }
+    }
+  )
+
+  if ($state.Error) {
+    Write-Host ""
+    Write-Host "Update check error: $($state.Error)" -ForegroundColor DarkYellow
+  }
+}
+
 function Show-PaulosBoot {
   $tools = @(
     [PSCustomObject]@{ Icon = "📦"; Name = "pnpm"; Cmd = "pnpm"; Use = "dev/build/test/i/add" },
@@ -891,6 +1170,20 @@ function Show-PaulosBoot {
     Write-Host $line -ForegroundColor $color
   }
   Write-Host ""
+
+  Invoke-PaulosUpdateCheck -Quiet | Out-Null
+
+  $updateState = Get-PaulosUpdateState
+  if (
+    $null -ne $updateState -and
+    $updateState.PSObject.Properties.Name -contains "UpdateAvailable" -and
+    [bool]$updateState.UpdateAvailable
+  ) {
+    Write-Host "⬆ PaulosShell update available: $($updateState.LatestVersion)" -ForegroundColor Yellow
+    Write-Host "  Current: $($updateState.CurrentVersion) · Run: paulos update self" -ForegroundColor DarkGray
+    Write-Host ""
+  }
+
   Show-PaulosTip
   Write-Host ""
 }

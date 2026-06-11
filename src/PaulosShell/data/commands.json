@@ -168,5 +168,20 @@
     "Category": "Images",
     "Command": "icogen",
     "Description": "Generate favicon.ico using ImageMagick"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos update check",
+    "Description": "Check GitHub for a newer PaulosShell release"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos update self",
+    "Description": "Show safe self-update instructions"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos update clear-cache",
+    "Description": "Clear cached update-check result"
   }
 ]
