@@ -83,7 +83,7 @@ if ($existingTag) {
   throw "Tag already exists: $tag"
 }
 
-Confirm-OrExit "Create release $tag?"
+Confirm-OrExit "Create release $($tag)?"
 
 $content = Get-Content $manifestPath -Raw
 $pattern = "(?m)^(\s*ModuleVersion\s*=\s*')[^']*(')"
