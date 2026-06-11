@@ -141,8 +141,16 @@ function Install-PaulosDevShellTools {
 
   $tools = Get-PaulosData "tools"
   foreach ($tool in $tools) {
-    if (-not $IncludeOptional -and -not $tool.Essential) { continue }
+    $essential = if ($tool.PSObject.Properties.Name -contains "Essential") { [bool]$tool.Essential } else { $false }
+
+    if (-not $IncludeOptional -and -not $essential) { continue }
+    if (Test-PaulosToolInstalled $tool) {
+      Write-Host "✓ $($tool.Tool) already installed" -ForegroundColor Green
+      continue
+    }
+
     if ([string]::IsNullOrWhiteSpace($tool.WingetId)) { continue }
+
     Install-PaulosWingetPackageIfMissing -Command $tool.Command -PackageId $tool.WingetId
   }
 
@@ -417,8 +425,11 @@ function Show-PaulosTable {
 
 function Get-PaulosToolRows {
   Get-PaulosData "tools" | ForEach-Object {
+    $installed = Test-PaulosToolInstalled $_
+    $essential = if ($_.PSObject.Properties.Name -contains "Essential") { [bool]$_.Essential } else { $false }
+
     [PSCustomObject]@{
-      Status = if (Test-PaulosCommand $_.Command) { "✓" } else { "missing" }
+      Status = if ($installed) { "✓" } elseif ($essential) { "missing" } else { "optional" }
       Category = $_.Category
       Tool = $_.Tool
       Cmd = $_.Command
@@ -429,8 +440,11 @@ function Get-PaulosToolRows {
 
 function Get-PaulosModuleRows {
   Get-PaulosData "modules" | ForEach-Object {
+    $installed = [bool](Get-Module -ListAvailable -Name $_.Module)
+    $essential = if ($_.PSObject.Properties.Name -contains "Essential") { [bool]$_.Essential } else { $false }
+
     [PSCustomObject]@{
-      Status = if (Get-Module -ListAvailable -Name $_.Module) { "✓" } else { "missing" }
+      Status = if ($installed) { "✓" } elseif ($essential) { "missing" } else { "optional" }
       Category = $_.Category
       Module = $_.Module
       Description = $_.Description
@@ -790,6 +804,26 @@ function Invoke-PaulosWizard {
   Write-Host ""
   Write-Host "Final diagnostics:" -ForegroundColor Cyan
   Invoke-PaulosSetup
+}
+
+function Test-PaulosToolInstalled {
+  param(
+    [Parameter(Mandatory = $true)]
+    [object]$Tool
+  )
+
+  $hasCommand = $false
+  $hasPath = $false
+
+  if ($Tool.PSObject.Properties.Name -contains "Command" -and -not [string]::IsNullOrWhiteSpace($Tool.Command)) {
+    $hasCommand = [bool](Get-Command $Tool.Command -ErrorAction SilentlyContinue)
+  }
+
+  if ($Tool.PSObject.Properties.Name -contains "Path" -and -not [string]::IsNullOrWhiteSpace($Tool.Path)) {
+    $hasPath = Test-Path $Tool.Path
+  }
+
+  return $hasCommand -or $hasPath
 }
 
 function shellcheck {

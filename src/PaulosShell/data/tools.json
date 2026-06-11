@@ -179,6 +179,7 @@
     "Category": "Editor",
     "Tool": "Notepad++",
     "Command": "notepad++",
+    "Path": "C:\\Program Files\\Notepad++\\notepad++.exe",
     "WingetId": "Notepad++.Notepad++",
     "Description": "Lightweight editor",
     "Essential": false
