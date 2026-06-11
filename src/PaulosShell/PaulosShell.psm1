@@ -7,6 +7,9 @@ Set-StrictMode -Version Latest
 $script:PaulosModuleRoot = $PSScriptRoot
 $script:PaulosStateDir = Join-Path $HOME ".paulos-shell"
 $script:PaulosBackupDir = Join-Path $script:PaulosStateDir "backups"
+$script:PaulosModuleBackupDir = Join-Path $script:PaulosBackupDir "modules"
+$script:PaulosDownloadsDir = Join-Path $script:PaulosStateDir "downloads"
+$script:PaulosStagingDir = Join-Path $script:PaulosStateDir "staging"
 $script:PaulosRepoOwner = "dpaulos6"
 $script:PaulosRepoName = "shell.dpaulos.pt"
 $script:PaulosUpdateCheckIntervalHours = 12
@@ -47,6 +50,26 @@ function Get-PaulosData {
 function Ensure-PaulosStateDirs {
   New-Item -ItemType Directory -Path $script:PaulosStateDir -Force | Out-Null
   New-Item -ItemType Directory -Path $script:PaulosBackupDir -Force | Out-Null
+  New-Item -ItemType Directory -Path $script:PaulosModuleBackupDir -Force | Out-Null
+  New-Item -ItemType Directory -Path $script:PaulosDownloadsDir -Force | Out-Null
+  New-Item -ItemType Directory -Path $script:PaulosStagingDir -Force | Out-Null
+}
+
+function Get-PaulosInstalledModuleRoot {
+  return Join-Path ([Environment]::GetFolderPath("MyDocuments")) "PowerShell\Modules\PaulosShell"
+}
+
+function Get-PaulosInstalledModuleManifestPath {
+  return Join-Path (Get-PaulosInstalledModuleRoot) "PaulosShell.psd1"
+}
+
+function Clear-PaulosUpdateCache {
+  if (Test-Path $script:PaulosUpdateStatePath) {
+    Remove-Item $script:PaulosUpdateStatePath -Force -ErrorAction SilentlyContinue
+    return $true
+  }
+
+  return $false
 }
 
 function Backup-PaulosProfile {
@@ -476,7 +499,7 @@ function Show-PaulosUsage {
   Write-Host "  font [download|open|list]"
   Write-Host "  starship [fix|config|open]"
   Write-Host "  github [login|setup-git|logout]"
-  Write-Host "  update [check|self|clear-cache|winget|modules|pnpm]"
+  Write-Host "  update [check|status|self|yes|force|clear-cache|winget|modules|pnpm]"
   Write-Host "  pnpm [approve|store]"
   Write-Host "  backup / restore [latest]"
   Write-Host "  tip"
@@ -779,31 +802,14 @@ function Invoke-PaulosUpdate {
   }
 
   if ($Action -eq "clear-cache") {
-    Remove-Item $script:PaulosUpdateStatePath -Force -ErrorAction SilentlyContinue
-    Write-Host "✓ PaulosShell update-check cache cleared." -ForegroundColor Green
+    Clear-PaulosUpdateCache | Out-Null
+    Write-Host "PaulosShell update-check cache cleared." -ForegroundColor Green
     return
   }
 
-  if ($Action -eq "self") {
-    Write-Host ""
-    Write-Host "PaulosShell self-update" -ForegroundColor Cyan
-    Write-Host "Recommended safe update:" -ForegroundColor DarkGray
-    Write-Host "  cd path\to\your\shell.dpaulos.pt clone"
-    Write-Host "  git pull"
-    Write-Host "  .\update.ps1"
-    Write-Host "  Remove-Module PaulosShell -Force -ErrorAction SilentlyContinue"
-    Write-Host "  . `$PROFILE"
-    Write-Host ""
-    Write-Host "Current installed version: $(Get-PaulosCurrentVersion)" -ForegroundColor DarkGray
-
-    $state = Invoke-PaulosUpdateCheck -Force -Quiet
-    if ($state.UpdateAvailable) {
-      Write-Host "Latest available version: $($state.LatestVersion)" -ForegroundColor Yellow
-    }
-    else {
-      Write-Host "Latest available version: $($state.LatestVersion)" -ForegroundColor Green
-    }
-
+  if ($Action -in @("self", "yes", "force")) {
+    $latest = Get-PaulosLatestRelease
+    Invoke-PaulosSelfUpdate -Action $Action -LatestRelease $latest
     return
   }
 
@@ -815,7 +821,7 @@ function Invoke-PaulosUpdate {
     [PSCustomObject]@{ Status = if (Test-PaulosCommand pnpm) { "✓" } else { "missing" }; Item = "project deps"; Detail = "paulos update pnpm" },
     [PSCustomObject]@{ Status = "manual"; Item = "Nerd Font"; Detail = "paulos font download" },
     [PSCustomObject]@{ Status = "info"; Item = "Check PaulosShell"; Detail = "paulos update check" },
-    [PSCustomObject]@{ Status = "manual"; Item = "Update PaulosShell"; Detail = "paulos update self" }
+    [PSCustomObject]@{ Status = "manual"; Item = "Update PaulosShell"; Detail = "paulos update self / yes / force" }
   )
 }
 
@@ -916,7 +922,7 @@ function shellcheck {
 }
 
 function Get-PaulosCurrentVersion {
-  $manifestPath = Join-Path $script:PaulosModuleRoot "PaulosShell.psd1"
+  $manifestPath = Get-PaulosInstalledModuleManifestPath
 
   if (-not (Test-Path $manifestPath)) {
     return "0.0.0"
@@ -1035,8 +1041,10 @@ function Get-PaulosLatestRelease {
     return [PSCustomObject]@{
       Ok = $true
       Version = [string]$release.tag_name
+      TagName = [string]$release.tag_name
       Name = [string]$release.name
       Url = [string]$release.html_url
+      ZipballUrl = [string]$release.zipball_url
       PublishedAt = [string]$release.published_at
       Error = ""
     }
@@ -1045,12 +1053,136 @@ function Get-PaulosLatestRelease {
     return [PSCustomObject]@{
       Ok = $false
       Version = ""
+      TagName = ""
       Name = ""
       Url = ""
+      ZipballUrl = ""
       PublishedAt = ""
       Error = $_.Exception.Message
     }
   }
+}
+
+function Confirm-PaulosSelfUpdate {
+  param(
+    [Parameter(Mandatory = $true)][string]$CurrentVersion,
+    [Parameter(Mandatory = $true)][string]$LatestVersion,
+    [Parameter(Mandatory = $true)][string]$Action
+  )
+
+  if ($Action -in @("yes", "force")) {
+    return $true
+  }
+
+  $answer = Read-Host "Install PaulosShell $LatestVersion over $CurrentVersion now? [y/N]"
+  return $answer -match "^(y|Y)"
+}
+
+function Invoke-PaulosSelfUpdate {
+  param(
+    [Parameter(Mandatory = $true)][string]$Action,
+    [Parameter(Mandatory = $true)][object]$LatestRelease
+  )
+
+  Ensure-PaulosStateDirs
+
+  if (-not $LatestRelease.Ok) {
+    Write-Warning "Unable to fetch the latest release: $($LatestRelease.Error)"
+    return
+  }
+
+  $installedRoot = Get-PaulosInstalledModuleRoot
+  $installedManifest = Get-PaulosInstalledModuleManifestPath
+  $currentVersion = Get-PaulosCurrentVersion
+  $latestVersion = [string]$LatestRelease.Version
+  $reinstallLatest = $Action -eq "force"
+
+  if (-not $reinstallLatest -and -not (Test-PaulosUpdateAvailable -CurrentVersion $currentVersion -LatestVersion $latestVersion)) {
+    Write-Host ""
+    Write-Host "PaulosShell is up to date." -ForegroundColor Green
+    Write-Host "  Current: $currentVersion" -ForegroundColor DarkGray
+    Write-Host "  Latest:  $latestVersion" -ForegroundColor DarkGray
+    return
+  }
+
+  if (-not (Confirm-PaulosSelfUpdate -CurrentVersion $currentVersion -LatestVersion $latestVersion -Action $Action)) {
+    Write-Host ""
+    Write-Host "Update cancelled." -ForegroundColor DarkGray
+    return
+  }
+
+  if (-not (Test-Path $installedManifest)) {
+    Write-Warning "Installed module manifest not found at $installedManifest"
+    return
+  }
+
+  if ([string]::IsNullOrWhiteSpace($LatestRelease.ZipballUrl)) {
+    throw "Latest release did not include a zipball_url."
+  }
+
+  $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
+  $cleanVersion = ($latestVersion -replace "^v", "") -replace "[^0-9A-Za-z._-]", "_"
+  $downloadPath = Join-Path $script:PaulosDownloadsDir ("PaulosShell.{0}.{1}.zip" -f $cleanVersion, $timestamp)
+  $stagingPath = Join-Path $script:PaulosStagingDir ("PaulosShell.{0}" -f $timestamp)
+  $moduleBackupPath = Join-Path $script:PaulosModuleBackupDir ("PaulosShell.{0}" -f $timestamp)
+  $releaseRoot = $null
+  $backupCreated = $false
+
+  if (Test-Path $stagingPath) {
+    Remove-Item $stagingPath -Recurse -Force -ErrorAction SilentlyContinue
+  }
+
+  Write-Host ""
+  Write-Host "Downloading PaulosShell $latestVersion..." -ForegroundColor Cyan
+  Invoke-WebRequest `
+    -Uri $LatestRelease.ZipballUrl `
+    -OutFile $downloadPath `
+    -Headers @{
+      "Accept" = "application/vnd.github+json"
+      "User-Agent" = "PaulosShell"
+    } `
+    -TimeoutSec 60 `
+    -ErrorAction Stop | Out-Null
+
+  Write-Host "Expanding release archive..." -ForegroundColor Cyan
+  Expand-Archive -LiteralPath $downloadPath -DestinationPath $stagingPath -Force
+
+  $releaseRoot = Get-ChildItem -Path $stagingPath -Directory -Recurse -ErrorAction SilentlyContinue |
+    Where-Object {
+      (Test-Path (Join-Path $_.FullName "PaulosShell.psm1")) -and
+      (Test-Path (Join-Path $_.FullName "PaulosShell.psd1"))
+    } |
+    Sort-Object { $_.FullName.Length } |
+    Select-Object -First 1
+
+  if ($null -eq $releaseRoot) {
+    throw "Could not locate an extracted PaulosShell module in $stagingPath."
+  }
+
+  Write-Host "Backing up installed module..." -ForegroundColor Cyan
+  Copy-Item -Path $installedRoot -Destination $moduleBackupPath -Recurse -Force
+  $backupCreated = $true
+
+  try {
+    Remove-Item -Path $installedRoot -Recurse -Force -ErrorAction Stop
+    Copy-Item -Path $releaseRoot.FullName -Destination $installedRoot -Recurse -Force -ErrorAction Stop
+    Clear-PaulosUpdateCache | Out-Null
+  }
+  catch {
+    if ($backupCreated -and (Test-Path $moduleBackupPath)) {
+      Remove-Item -Path $installedRoot -Recurse -Force -ErrorAction SilentlyContinue
+      Copy-Item -Path $moduleBackupPath -Destination $installedRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    throw
+  }
+
+  Write-Host ""
+  Write-Host "PaulosShell updated to $latestVersion." -ForegroundColor Green
+  Write-Host "Backup: $moduleBackupPath" -ForegroundColor DarkGray
+  Write-Host "Reload with:" -ForegroundColor DarkGray
+  Write-Host "  Remove-Module PaulosShell -Force -ErrorAction SilentlyContinue" -ForegroundColor DarkGray
+  Write-Host "  . `$PROFILE" -ForegroundColor DarkGray
 }
 
 function Invoke-PaulosUpdateCheck {

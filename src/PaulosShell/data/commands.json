@@ -177,7 +177,17 @@
   {
     "Category": "Shell",
     "Command": "paulos update self",
-    "Description": "Show safe self-update instructions"
+    "Description": "Install the latest release with confirmation"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos update yes",
+    "Description": "Install the latest release without confirmation"
+  },
+  {
+    "Category": "Shell",
+    "Command": "paulos update force",
+    "Description": "Reinstall the latest release without confirmation"
   },
   {
     "Category": "Shell",

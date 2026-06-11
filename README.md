@@ -154,7 +154,44 @@ paulos starship open
 
 ## Update
 
-From your cloned repo:
+`paulos update self` installs the latest GitHub release into the current user module path.
+
+Default behavior:
+
+```powershell
+paulos update self
+```
+
+This checks the latest release tag against the installed `PaulosShell.psd1` version, then prompts before downloading and replacing the installed module.
+
+Skip the prompt:
+
+```powershell
+paulos update yes
+```
+
+Reinstall the latest release even if the installed version is already current:
+
+```powershell
+paulos update force
+```
+
+The updater is intentionally conservative:
+
+- downloads the release archive to `~/.paulos-shell/downloads`
+- extracts it to `~/.paulos-shell/staging`
+- backs up the installed module to `~/.paulos-shell/backups/modules/PaulosShell.<timestamp>`
+- replaces only `~/Documents/PowerShell/Modules/PaulosShell`
+- leaves your PowerShell profile untouched
+
+After a successful update, reload the current session:
+
+```powershell
+Remove-Module PaulosShell -Force -ErrorAction SilentlyContinue
+. $PROFILE
+```
+
+If you prefer the repo-local updater while developing from a clone, you can still use:
 
 ```powershell
 git pull
@@ -201,8 +238,24 @@ This repo is designed to be conservative:
 - It uses marked managed blocks so it can update/remove only what it owns.
 - It does not delete your custom profile content.
 - It installs the module under your user documents folder.
+- Self-updates back up the installed module before replacement.
 - It does not silently configure GitHub auth or fonts.
 - Starship and Delta are explicit commands.
+
+## Rollback
+
+If a self-update needs to be rolled back, copy the backup module directory back into the user module path.
+
+Example:
+
+```powershell
+Remove-Item "$HOME\Documents\PowerShell\Modules\PaulosShell" -Recurse -Force
+Copy-Item "$HOME\.paulos-shell\backups\modules\PaulosShell.<timestamp>" "$HOME\Documents\PowerShell\Modules\PaulosShell" -Recurse -Force
+Remove-Module PaulosShell -Force -ErrorAction SilentlyContinue
+. $PROFILE
+```
+
+Pick the timestamped backup you want from `~/.paulos-shell/backups/modules`.
 
 ## Custom local overrides
 
