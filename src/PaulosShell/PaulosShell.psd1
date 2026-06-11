@@ -1,6 +1,6 @@
 @{
   RootModule = 'PaulosShell.psm1'
-  ModuleVersion = '0.2.3'
+  ModuleVersion = '0.2.4'
   GUID = 'd35520f2-2b69-4565-b500-e1706ee085cd'
   Author = 'Diogo Paulos'
   CompanyName = 'Paulos Shell'
@@ -126,5 +126,6 @@
     }
   }
 }
+
 
 
