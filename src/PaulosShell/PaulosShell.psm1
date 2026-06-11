@@ -1203,9 +1203,9 @@ function Invoke-PaulosSelfUpdate {
   Write-Host ""
   Write-Host "PaulosShell updated to $latestVersion." -ForegroundColor Green
   Write-Host "Backup: $moduleBackupPath" -ForegroundColor DarkGray
-  Write-Host "Reload with:" -ForegroundColor DarkGray
-  Write-Host "  Remove-Module PaulosShell -Force -ErrorAction SilentlyContinue" -ForegroundColor DarkGray
-  Write-Host "  . `$PROFILE" -ForegroundColor DarkGray
+  Write-Host ""
+
+  Reset-PaulosShellModule -NoBoot
 }
 
 function Invoke-PaulosUpdateCheck {
@@ -1268,6 +1268,38 @@ function Invoke-PaulosUpdateCheck {
   return $state
 }
 
+function Reset-PaulosShellModule {
+  param(
+    [switch]$NoBoot
+  )
+
+  $manifestPath = Join-Path $script:PaulosModuleRoot "PaulosShell.psd1"
+
+  if (-not (Test-Path $manifestPath)) {
+    Write-Warning "Could not reset PaulosShell because manifest was not found: $manifestPath"
+    return
+  }
+
+  try {
+    Import-Module $manifestPath -Force -Global -ErrorAction Stop
+
+    if (Get-Command Initialize-PaulosShell -ErrorAction SilentlyContinue) {
+      Initialize-PaulosShell -NoBoot:$NoBoot
+    }
+
+    Write-Host "✓ PaulosShell reset." -ForegroundColor Green
+
+    if (Get-Command Show-PaulosVersion -ErrorAction SilentlyContinue) {
+      Show-PaulosVersion
+    }
+  }
+  catch {
+    Write-Warning "Update installed, but automatic reset failed: $($_.Exception.Message)"
+    Write-Host "Reset manually with:" -ForegroundColor DarkGray
+    Write-Host "  Remove-Module PaulosShell -Force -ErrorAction SilentlyContinue" -ForegroundColor DarkGray
+    Write-Host "  . `$PROFILE" -ForegroundColor DarkGray
+  }
+}
 function Show-PaulosUpdateStatus {
   $state = Invoke-PaulosUpdateCheck -Force
 
