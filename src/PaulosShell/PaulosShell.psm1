@@ -943,7 +943,7 @@ function shellcheck {
 }
 
 function Get-PaulosCurrentVersion {
-  $manifestPath = Get-PaulosInstalledModuleManifestPath
+  $manifestPath = Join-Path $script:PaulosModuleRoot "PaulosShell.psd1"
 
   if (-not (Test-Path $manifestPath)) {
     return "0.0.0"
@@ -1356,10 +1356,27 @@ function Show-PaulosBoot {
 }
 
 function paulos {
+  [CmdletBinding()]
   param(
-    [Parameter(ValueFromRemainingArguments = $true)]
+    [Alias("h", "?")]
+    [switch]$Help,
+
+    [Alias("v")]
+    [switch]$Version,
+
+    [Parameter(ValueFromRemainingArguments = $true, Position = 0)]
     [string[]]$RemainingArgs
   )
+
+  if ($Version) {
+    Show-PaulosVersion
+    return
+  }
+
+  if ($Help) {
+    Show-PaulosHelp
+    return
+  }
 
   $tokens = @($RemainingArgs)
 
@@ -1385,6 +1402,7 @@ function paulos {
     "-v" { Show-PaulosVersion }
     "--version" { Show-PaulosVersion }
     "version" { Show-PaulosVersion }
+    "v" { Show-PaulosVersion }
 
     "commands" { Show-PaulosCommands }
     "cmds" { Show-PaulosCommands }
