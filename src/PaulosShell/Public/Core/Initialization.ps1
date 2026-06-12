@@ -14,7 +14,7 @@ function Show-PaulosBoot {
 
   Write-Host ""
   Write-Host "╭──────────────────────────────────────────────╮" -ForegroundColor DarkGray
-  Write-Host "│ ⚡ Paulos Dev Shell loaded                    │" -ForegroundColor Cyan
+  Write-Host "│ ⚡ Paulos Dev Shell loaded                   │" -ForegroundColor Cyan
   Write-Host "╰──────────────────────────────────────────────╯" -ForegroundColor DarkGray
   Write-Host ""
   Write-Host "Useful commands" -ForegroundColor Cyan
