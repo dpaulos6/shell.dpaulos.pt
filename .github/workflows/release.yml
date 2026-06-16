@@ -1,0 +1,61 @@
+name: Build installer and winget package
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Resolve version
+        id: meta
+        shell: pwsh
+        run: |
+          $version = '${{ github.event.release.tag_name }}' -replace '^v', ''
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Build installer
+        id: build
+        shell: pwsh
+        run: |
+          $installerPath = & .\scripts\build-installer.ps1 -Version '${{ steps.meta.outputs.version }}'
+          "installer=$installerPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Build winget manifests
+        shell: pwsh
+        run: |
+          $packageRoot = Join-Path $env:GITHUB_WORKSPACE 'artifacts\winget'
+          & .\scripts\update-winget-manifest.ps1 -Version '${{ steps.meta.outputs.version }}' -InstallerPath '${{ steps.build.outputs.installer }}' -OutputRoot $packageRoot
+
+      - name: Validate winget manifest
+        shell: pwsh
+        run: |
+          $manifest = Join-Path $env:GITHUB_WORKSPACE 'artifacts\winget\dpaulos6.shell\${{ steps.meta.outputs.version }}'
+          winget validate --disable-interactivity --manifest $manifest
+
+      - name: Upload installer asset to the release
+        if: github.event_name == 'release'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload '${{ github.event.release.tag_name }}' '${{ steps.build.outputs.installer }}' --clobber
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PaulosShell-${{ steps.meta.outputs.version }}-Setup.exe
+          path: ${{ steps.build.outputs.installer }}

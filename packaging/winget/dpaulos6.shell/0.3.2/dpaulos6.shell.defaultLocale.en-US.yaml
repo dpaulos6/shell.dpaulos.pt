@@ -1,0 +1,12 @@
+PackageIdentifier: dpaulos6.shell
+PackageVersion: 0.4.0
+PackageLocale: en-US
+PackageName: PaulosShell
+Publisher: dpaulos6
+PackageUrl: https://github.com/dpaulos6/shell.dpaulos.pt
+License: MIT
+LicenseUrl: https://github.com/dpaulos6/shell.dpaulos.pt/blob/v0.4.0/LICENSE
+Copyright: Copyright (c) Diogo Paulos. All rights reserved.
+ShortDescription: A safe, updateable PowerShell dev-shell toolkit with a paulos command center.
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

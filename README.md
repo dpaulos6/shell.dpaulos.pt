@@ -87,7 +87,11 @@ paulos starship config
 paulos github
 paulos github login
 paulos update
+paulos repos
+paulos repo-status
 paulos pnpm approve
+repos -NoFetch
+repos -All -NoFetch
 ```
 
 ## Delta
@@ -215,6 +219,39 @@ Update current project dependencies:
 ```powershell
 paulos update pnpm
 ```
+
+## Winget
+
+PaulosShell will be published to Windows Package Manager as `dpaulos6.shell` starting with `v0.4.0`.
+
+Install, upgrade, or remove it with:
+
+```powershell
+winget install dpaulos6.shell
+winget upgrade dpaulos6.shell
+winget uninstall dpaulos6.shell
+```
+
+The Windows installer is built with Inno Setup and installs the module into the current user's PowerShell module path:
+
+`$HOME\Documents\PowerShell\Modules\PaulosShell`
+
+Silent installs are supported with:
+
+```powershell
+PaulosShell-0.4.0-Setup.exe /VERYSILENT /NORESTART
+```
+
+Release process:
+
+1. Bump the module version in `src/PaulosShell/PaulosShell.psd1`.
+2. Build the installer with `.\scripts\build-installer.ps1`.
+3. Create the GitHub release.
+4. Compute the installer SHA256 and update the winget installer manifest with `.\scripts\update-winget-manifest.ps1`.
+5. Validate the package directory with `winget validate --manifest packaging\winget\dpaulos6.shell\<version>`.
+6. Submit the package to [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs).
+
+Do not publish `v0.3.1` to winget. The winget package should begin with `v0.4.0` after the manifest-corruption fix is released.
 
 ## Uninstall
 

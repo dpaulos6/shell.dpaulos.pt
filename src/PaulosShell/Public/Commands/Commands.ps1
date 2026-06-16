@@ -199,6 +199,9 @@ function paulos {
 
     "binaries" { Show-PaulosTools }
 
+    "repos" { Invoke-PaulosRepos -RemainingArgs (@($tokens | Select-Object -Skip 1)) }
+    "repo-status" { Invoke-PaulosRepos -RemainingArgs (@($tokens | Select-Object -Skip 1)) }
+
     "modules" { Show-PaulosModules }
     "plugins" { Show-PaulosModules }
 

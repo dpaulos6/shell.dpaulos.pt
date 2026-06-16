@@ -43,6 +43,8 @@ function Show-PaulosUsage {
   Write-Host "  commands              Custom commands only"
   Write-Host "  tools [install]        CLI tools status / install essentials"
   Write-Host "  modules               PowerShell modules status"
+  Write-Host "  repos [all|nofetch]   Local Git repository status scan"
+  Write-Host "  repo-status           Alias for repos"
   Write-Host "  delta [fix|test|side|unified]"
   Write-Host "  font [download|open|list]"
   Write-Host "  starship [fix|config|open]"

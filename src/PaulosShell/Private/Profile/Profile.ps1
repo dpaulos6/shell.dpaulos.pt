@@ -48,8 +48,26 @@ function Restore-PaulosProfile {
 
 function Get-PaulosStarshipConfigPath { return Join-Path $HOME ".config\starship.toml" }
 
+function Get-PaulosStarshipBundledConfigPath {
+  if ($script:PaulosModuleRoot) {
+    return Join-Path $script:PaulosModuleRoot "config\starship.toml"
+  }
+
+  return Join-Path (Resolve-Path (Join-Path $PSScriptRoot "..\..\..\..")).Path "config\starship.toml"
+}
+
+function Get-PaulosStarshipConfigContent {
+  $bundledConfigPath = Get-PaulosStarshipBundledConfigPath
+
+  if (-not (Test-Path -LiteralPath $bundledConfigPath)) {
+    throw "Bundled Starship config not found: $bundledConfigPath"
+  }
+
+  return Get-Content -Path $bundledConfigPath -Raw -Encoding UTF8
+}
+
 function Get-PaulosStarshipBlock {
-@'
+  @'
 # >>> PaulosShell starship block >>>
 if (Get-Command starship -ErrorAction SilentlyContinue) {
   function Invoke-Starship-TransientFunction {
@@ -92,42 +110,7 @@ function Test-PaulosProfileContains {
 }
 
 function Get-PaulosDefaultStarshipConfig {
-@'
-# PaulosShell default Starship config
-# Edit freely. This file is backed up before PaulosShell overwrites it.
-
-add_newline = true
-command_timeout = 1000
-
-[character]
-success_symbol = "[❯](bold green)"
-error_symbol = "[❯](bold red)"
-vimcmd_symbol = "[❮](bold green)"
-
-[directory]
-truncation_length = 3
-truncate_to_repo = false
-read_only = " 󰌾"
-
-[git_branch]
-symbol = " "
-
-[git_status]
-disabled = false
-
-[nodejs]
-symbol = " "
-
-[package]
-symbol = "󰏗 "
-
-[dotnet]
-symbol = " "
-
-[cmd_duration]
-min_time = 1000
-format = "took [$duration]($style) "
-'@
+  return Get-PaulosStarshipConfigContent
 }
 
 function Get-PaulosInstalledFontNames {

@@ -56,6 +56,11 @@
   },
   {
     "Category": "Shell",
+    "Command": "paulos repos / repo-status",
+    "Description": "Scan local Git repositories for clean, dirty, push, and pull states"
+  },
+  {
+    "Category": "Shell",
     "Command": "paulos backup / restore",
     "Description": "Backup or restore PowerShell profile"
   },

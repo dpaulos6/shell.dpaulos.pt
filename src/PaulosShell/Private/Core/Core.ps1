@@ -72,7 +72,12 @@ function Set-PaulosManifestVersion {
     throw "Could not find ModuleVersion in manifest: $ManifestPath"
   }
 
-  $updated = [regex]::Replace($content, $pattern, ('$1' + $Version + '$2'), 1)
+  $updated = [regex]::Replace(
+    $content,
+    $pattern,
+    { param($match) $match.Groups[1].Value + $Version + $match.Groups[2].Value },
+    1
+  )
   Set-Content -Path $ManifestPath -Value $updated -Encoding UTF8
 }
 

@@ -17,6 +17,7 @@ $script:PaulosUpdateStatePath = Join-Path $script:PaulosStateDir "update-check.j
 
 $moduleFiles = @(
   "Private\Core\Core.ps1"
+  "Private\Git\Git.ps1"
   "Private\Profile\Profile.ps1"
   "Private\Install\Install.ps1"
   "Private\UI\UI.ps1"
@@ -24,6 +25,7 @@ $moduleFiles = @(
   "Public\Core\Help.ps1"
   "Public\Core\Initialization.ps1"
   "Public\Actions\Actions.ps1"
+  "Public\Actions\Repos.ps1"
   "Public\Commands\Commands.ps1"
 )
 
